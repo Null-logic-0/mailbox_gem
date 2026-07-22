@@ -12,9 +12,15 @@ MailboxGem is a standalone engine. It doesn't modify Rails or Action Mailer; it 
 Rails already has two ways to look at outgoing mail in development, and both have a gap:
 
 - **`ActionMailer::Preview`** (`/rails/mailers`) renders a mailer against data you construct by hand in a preview class. It never touches your real application code path, so it can drift from what actually gets sent.
-- **`ActionMailer::Base.deliveries`** only accumulates anything when `delivery_method` is `:test`, which is what the `test` environment uses — not `development`. In development there's normally nowhere to look at all.
+- **`ActionMailer::Base.deliveries`** only accumulates anything when `delivery_method` is `:test`, which is what the `test` environment uses — not `development`. In development, there's normally nowhere to look at all.
 
 MailboxGem fills that gap: it captures the real `Mail::Message` your app hands to Action Mailer when a user actually triggers an email (signs up, resets a password, checks out), and gives you a live UI to inspect it — HTML, plain text, and raw source, with attachments.
+
+## Demo 
+
+
+https://github.com/user-attachments/assets/16f82b71-7b6c-47fa-8acc-0dbe147975cd
+
 
 ## Features
 
