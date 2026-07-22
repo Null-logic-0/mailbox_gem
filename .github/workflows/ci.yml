@@ -83,7 +83,7 @@ jobs:
         run: bin/rails test
 
       - name: Keep screenshots from failed system tests
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: failure()
         with:
           # upload-artifact@v4 requires unique names per workflow run - without
