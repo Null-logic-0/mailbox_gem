@@ -74,7 +74,13 @@ jobs:
           RAILS_ENV: test
           # RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
           # REDIS_URL: redis://localhost:6379/0
-        run: bin/rails db:test:prepare test
+        # No db:test:prepare: this engine has no ActiveRecord models or
+        # migrations of its own (Store is in-memory by design - see
+        # lib/mailbox_gem/store.rb), so there's no db/schema.rb to load.
+        # db:test:prepare failed on that, and chained onto `test` in one
+        # bin/rails invocation, surfaced as an unrelated-looking
+        # "Unrecognized command" error rather than the real cause.
+        run: bin/rails test
 
       - name: Keep screenshots from failed system tests
         uses: actions/upload-artifact@v4

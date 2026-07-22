@@ -11,7 +11,11 @@ module MailboxGem
 
     def initialize(mail)
       @id = SecureRandom.uuid
-      @captured_at = Time.current
+      # Time.now, not Time.current: Time.current follows the host app's
+      # Time.zone (UTC by default in Rails), which has nothing to do with
+      # what a developer watching their own dev server actually wants here -
+      # their own machine's clock. Time.now always reads the OS's local zone.
+      @captured_at = Time.now
       @mail = mail
     end
 
