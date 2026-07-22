@@ -25,7 +25,7 @@ Gem::Specification.new do |spec|
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = "https://github.com/Null-logic-0/mailbox_gem"
   spec.metadata["changelog_uri"] = "https://github.com/Null-logic-0/mailbox_gem/blob/main/CHANGELOG.md"
-  spec.metadata["bug_tracker_uri"]   = "https://github.com/lukatchelidze/mailbox_gem/issues"
+  spec.metadata["bug_tracker_uri"] = "https://github.com/Null-logic-0/mailbox_gem/issues"
   spec.metadata["rubygems_mfa_required"] = "true"
 
 
