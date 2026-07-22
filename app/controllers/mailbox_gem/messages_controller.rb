@@ -29,7 +29,10 @@ module MailboxGem
     private
 
     def filtered_messages
-      Store.all.select { |message| message.matches?(@query) }
+      Store.all
+           .select { |message| message.matches?(@query) }
+           .sort_by { |message| message.captured_at }
+           .reverse
     end
   end
 end
