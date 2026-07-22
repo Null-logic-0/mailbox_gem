@@ -1,0 +1,57 @@
+<%= link_to "← Back to mailbox", messages_path, class: "back-link" %>
+
+<h1><%= @message.subject.presence || "(no subject)" %></h1>
+
+<dl class="headers">
+  <dt>From</dt><dd><%= @message.from %></dd>
+  <dt>To</dt><dd><%= @message.to %></dd>
+  <% if @message.cc.present? %>
+    <dt>Cc</dt><dd><%= @message.cc %></dd>
+  <% end %>
+  <% if @message.bcc.present? %>
+    <dt>Bcc</dt><dd><%= @message.bcc %></dd>
+  <% end %>
+  <dt>Captured</dt><dd><%= @message.captured_at.strftime("%d %B, %Y, %I:%M %p") %></dd>
+</dl>
+
+<nav class="tabs">
+  <% if @message.html_body %>
+    <%= link_to "HTML",
+    message_path(@message.id, view: "html"),
+    class: ["tab", ("active" if @view == "html")] %>
+  <% end %>
+  <% if @message.text_body %>
+    <%= link_to "Text",
+    message_path(@message.id, view: "text"),
+    class: ["tab", ("active" if @view == "text")] %>
+  <% end %>
+  <%= link_to "Source",
+  message_path(@message.id, view: "source"),
+  class: ["tab", ("active" if @view == "source")] %>
+</nav>
+
+<% case @view %>
+<% when "html" %>
+    <iframe
+      class="body-frame"
+      sandbox=""
+      title="HTML body"
+      referrerpolicy="no-referrer"
+      srcdoc="<%= @message.html_body %>"
+    >
+    </iframe>
+  <% when "text" %>
+    <pre class="body-text"><%= @message.text_body %></pre>
+  <% when "source" %>
+    <pre class="body-text"><%= @message.source %></pre>
+  <% end %>
+
+  <% if @message.attachments.any? %>
+    <h2>Attachments</h2>
+    <ul class="attachments">
+      <% @message.attachments.each do |attachment| %>
+        <li><%= attachment.filename %>
+          <span class="muted">(<%= number_to_human_size(attachment.decoded.bytesize) %>)</span></li>
+      <% end %>
+    </ul>
+  <% end %>

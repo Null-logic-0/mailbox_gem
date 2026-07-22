@@ -1,0 +1,6 @@
+<tr>
+  <td><%= link_to message.from, message_path(message.id) %></td>
+  <td><%= message.to %></td>
+  <td><%= link_to message.subject.presence || "(no subject)", message_path(message.id) %></td>
+  <td><%= message.captured_at.strftime("%d %B, %Y, %I:%M %p") %></td>
+</tr>

@@ -1,0 +1,25 @@
+<% if messages.any? %>
+  <%= button_to "Clear all", clear_messages_path, method: :delete, class: "clear-button" %>
+
+  <table class="messages">
+    <thead>
+      <tr>
+        <th>From</th>
+        <th>To</th>
+        <th>Subject</th>
+        <th>Captured</th>
+      </tr>
+    </thead>
+    <tbody>
+      <%= render partial: "message_row", collection: messages, as: :message %>
+    </tbody>
+  </table>
+<% elsif query.present? %>
+  <p class="empty-state">No mail matches "<%= query %>".</p>
+<% else %>
+  <p class="empty-state">
+    No mail captured yet. Set
+    <code>config.action_mailer.delivery_method = :mailbox_gem</code>
+    in your development environment, then send some mail.
+  </p>
+<% end %>

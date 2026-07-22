@@ -8,6 +8,23 @@
   <%= yield :head %>
 
   <%= stylesheet_link_tag    "mailbox_gem/application", media: "all" %>
+
+  <%# Hand-written import map, not the importmap-rails gem: we only have a
+      fixed handful of modules, and this avoids requiring the host app to
+      manage config/importmap.rb for a UI that lives entirely on its own
+      page. asset_path resolves each specifier to its Propshaft-fingerprinted
+      URL, which is why this has to be rendered server-side rather than
+      living in a static JS file. %>
+  <script type="importmap">
+    {
+      "imports": {
+        "@hotwired/stimulus": "<%= asset_path('stimulus.min.js') %>",
+        "mailbox_gem/application": "<%= asset_path('mailbox_gem/application.js') %>",
+        "mailbox_gem/controllers/auto_refresh_controller": "<%= asset_path('mailbox_gem/controllers/auto_refresh_controller.js') %>"
+      }
+    }
+  </script>
+  <script type="module">import "mailbox_gem/application"</script>
 </head>
 <body>
 

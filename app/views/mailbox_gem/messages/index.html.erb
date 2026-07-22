@@ -1,0 +1,14 @@
+<div
+  data-controller="auto-refresh"
+  data-auto-refresh-base-url-value="<%= table_messages_path %>"
+  data-auto-refresh-query-value="<%= @query %>"
+>
+  <header class="mailbox-header">
+    <h1>Mailbox</h1>
+    <%= render "search", query: @query %>
+  </header>
+
+  <div data-auto-refresh-target="results">
+    <%= render "table", messages: @messages, query: @query %>
+  </div>
+</div>

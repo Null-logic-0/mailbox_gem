@@ -1,0 +1,34 @@
+<%= form_with url: messages_path,
+  method: :get,
+  class: "search-form",
+  data: { action: "submit->auto-refresh#submit" } do |f| %>
+
+  <div class="search-input-wrapper">
+    <div class="search-icon">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="currentColor"
+        class="size-6"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+        />
+      </svg>
+    </div>
+    <%= f.search_field :q,
+                   value: query,
+                   placeholder: "Search from, to, subject…",
+                   class: "search-input",
+                   data: {
+                     auto_refresh_target: "search",
+                     action: "input->auto-refresh#search",
+                   } %>
+
+  </div>
+
+<% end %>
