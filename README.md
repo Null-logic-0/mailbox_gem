@@ -1,5 +1,8 @@
 # MailboxGem
 
+<img width="1774" height="887" alt="mailbox_banner" src="https://github.com/user-attachments/assets/a8c594e1-8e11-48e1-ad3c-fe71fa25b317" />
+
+
 A development-only email inbox for Rails, inspired by [Phoenix's `/dev/mailbox`](https://hexdocs.pm/swoosh/Swoosh.Adapters.Local.html). Point `ActionMailer` at it in development and every email your app actually sends — through its real mailer code paths, not a hand-written preview — shows up in a live, searchable inbox in your browser.
 
 MailboxGem is a standalone engine. It doesn't modify Rails or Action Mailer; it registers itself as one more delivery method, the same extension point `letter_opener` and `mailcatcher` use.
