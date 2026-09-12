@@ -1,0 +1,128 @@
+#!/usr/bin/env ruby
+# Bumps MailboxGem::VERSION and re-locks every lockfile that records it.
+#
+#   bin/bump patch      # 0.1.1 -> 0.1.2
+#   bin/bump minor      # 0.1.1 -> 0.2.0
+#   bin/bump major      # 0.1.1 -> 1.0.0
+#   bin/bump 0.2.0.rc1  # any explicit version
+#
+# mailbox_gem is a path gem in Gemfile.lock and in every gemfiles/*.gemfile.lock
+# (the Appraisal gemfiles CI runs against), and each of those records the gem's
+# version. Bumping lib/mailbox_gem/version.rb without re-locking works locally
+# but fails CI, where setup-ruby installs in frozen mode:
+#
+#   The gemspecs for path gems changed, but the lockfile can't be updated
+#   because frozen mode is set
+#
+# So this does both steps and fails loudly if any lockfile didn't pick up the
+# new version. Passing the current version re-locks without bumping, which is
+# how you resume after a failed run.
+
+require "bundler" # only for Bundler.with_original_env; nothing from the bundle is loaded
+
+$stdout.sync = true
+Dir.chdir(File.expand_path("..", __dir__))
+
+VERSION_FILE = "lib/mailbox_gem/version.rb"
+VERSION_PATTERN = /^(\s*VERSION\s*=\s*")([^"]*)(")/
+LOCK_COMMANDS = [
+  %w[bundle install --quiet],                 # Gemfile.lock
+  %w[bundle exec appraisal install --jobs=4]  # regenerates gemfiles/*.gemfile, then re-locks each one
+]
+USAGE = <<~TEXT
+  Usage: bin/bump <major|minor|patch|X.Y.Z>
+
+  Bumps MailboxGem::VERSION in #{VERSION_FILE}, then re-locks Gemfile.lock and
+  gemfiles/*.gemfile.lock so they record the new version. Passing the current
+  version only re-locks.
+TEXT
+
+def run(*command)
+  puts "\n==> #{command.join(" ")}"
+  # BUNDLE_FROZEN=false beats a local `bundle config set deployment true` - the
+  # very setting that refuses to touch lockfiles - and with_original_env keeps
+  # this working under `bundle exec bin/bump`, which would otherwise pin
+  # BUNDLE_GEMFILE to the root Gemfile for every command below.
+  Bundler.with_original_env { system({ "BUNDLE_FROZEN" => "false" }, *command) }
+end
+
+def locked_version(lockfile)
+  File.read(lockfile)[/^ +mailbox_gem \(([^)]+)\)/, 1]
+end
+
+if %w[-h --help].include?(ARGV.first)
+  puts USAGE
+  exit
+end
+abort USAGE unless ARGV.size == 1
+request = ARGV.first
+
+source = File.read(VERSION_FILE)
+current = source[VERSION_PATTERN, 2]
+abort "Couldn't find VERSION = \"...\" in #{VERSION_FILE}" unless current
+
+target =
+  case request
+  when "major", "minor", "patch"
+    numbers = Gem::Version.new(current).segments.take_while { |segment| segment.is_a?(Integer) }
+    major, minor, patch = (numbers + [ 0, 0, 0 ]).first(3)
+    case request
+    when "major" then "#{major + 1}.0.0"
+    when "minor" then "#{major}.#{minor + 1}.0"
+    else "#{major}.#{minor}.#{patch + 1}"
+    end
+  else
+    abort "#{request.inspect} is not a version.\n\n#{USAGE}" unless Gem::Version.correct?(request)
+    # Canonical spelling (0.2.0-rc1 -> 0.2.0.pre.rc1): it's what the lockfiles
+    # and the built gem will use anyway.
+    Gem::Version.new(request).to_s
+  end
+
+current_version = Gem::Version.new(current)
+target_version = Gem::Version.new(target)
+
+if target_version < current_version
+  abort "Refusing to go backwards from #{current} to #{target}. Edit #{VERSION_FILE} by hand if you really mean it."
+end
+
+bumping = target_version != current_version
+if bumping
+  File.write(VERSION_FILE, source.sub(VERSION_PATTERN, "\\1#{target}\\3"))
+  puts "mailbox_gem #{current} -> #{target} (#{VERSION_FILE})"
+else
+  puts "mailbox_gem is already #{current}; re-locking only"
+end
+
+LOCK_COMMANDS.each do |command|
+  next if run(*command)
+  abort <<~MSG
+
+    `#{command.join(" ")}` failed. #{VERSION_FILE} already says #{target}, so fix
+    the problem above and run `bin/bump #{target}` to finish re-locking.
+  MSG
+end
+
+lockfiles = [ "Gemfile.lock", *Dir["gemfiles/*.gemfile.lock"].sort ]
+stale = lockfiles.reject do |lockfile|
+  locked = locked_version(lockfile)
+  locked && Gem::Version.new(locked) == target_version
+end
+abort "\nStill not recording mailbox_gem #{target}: #{stale.join(", ")}" unless stale.empty?
+
+puts "\nAll lockfiles record mailbox_gem #{target}:"
+lockfiles.each { |lockfile| puts "  #{lockfile}" }
+
+status = `git status --short -- #{VERSION_FILE} Gemfile.lock gemfiles 2>/dev/null`
+if status.empty?
+  puts "\nNothing changed; everything already recorded #{target}."
+else
+  message = bumping ? "Bump version to #{target}" : "Re-lock Gemfile.lock and gemfiles/*.gemfile.lock"
+  puts "\nChanged:"
+  puts status
+  puts <<~TEXT
+
+    Review the diff, then commit these together:
+      git add -- #{VERSION_FILE} Gemfile.lock gemfiles
+      git commit -m "#{message}"
+  TEXT
+end

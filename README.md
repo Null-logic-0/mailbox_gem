@@ -99,11 +99,22 @@ BUNDLE_GEMFILE=gemfiles/rails_8.0.gemfile bin/rails test
 BUNDLE_GEMFILE=gemfiles/rails_8.1.gemfile bin/rails test
 ```
 
-After changing `Appraisals` or the gemspec's dependencies, regenerate and commit the gemfiles:
+After changing `Appraisals` or the gemspec's dependencies, re-lock everything and commit the results. `appraisal generate` alone only rewrites `gemfiles/*.gemfile`; the committed `.lock` files have to be re-resolved too, or CI's frozen `bundle install` fails with "the gemspecs for path gems changed":
 
 ```bash
-bundle exec appraisal generate
+bundle install                # re-locks Gemfile.lock
+bundle exec appraisal install # regenerates gemfiles/*.gemfile and re-locks each one
 ```
+
+### Bumping the version
+
+The same constraint applies to the version: `mailbox_gem` is a path gem in `Gemfile.lock` and in every `gemfiles/*.gemfile.lock`, and each records its version. `bin/bump` edits `lib/mailbox_gem/version.rb` and re-locks all of them in one step, then fails if any lockfile didn't pick up the new version:
+
+```bash
+bin/bump patch # e.g. 0.1.1 -> 0.1.2; also minor, major, or an explicit version like 0.2.0
+```
+
+Review the diff, then commit `lib/mailbox_gem/version.rb`, `Gemfile.lock` and `gemfiles/` together. Passing the current version only re-locks.
 
 ## Contributing
 

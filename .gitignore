@@ -10,3 +10,6 @@
 /test/dummy/tmp/
 *.gem
 pkg/
+
+# OS
+.DS_Store
